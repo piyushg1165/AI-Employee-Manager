@@ -4,6 +4,7 @@ const {connectDB}=require('./db/mongodb')
 const express = require('express');
 const bodyParser = require('body-parser');
 const userRoutes = require('./routes/user.route.js');
+const messageRoutes = require('./routes/message.route.js');
 
 
 const app = express();
@@ -13,6 +14,7 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 app.use("/user", userRoutes);
+app.use('/message', messageRoutes);
 
 
 app.get('/', (req, res) => {
