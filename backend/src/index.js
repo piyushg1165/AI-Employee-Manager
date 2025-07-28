@@ -6,18 +6,18 @@ const bodyParser = require('body-parser');
 const userRoutes = require('./routes/user.route.js');
 // const messageRoutes = require('./routes/message.route.js');
 // const chatRoutes = require('./controllers/chat.controller.js');
-// const cors = require('cors');
+const cors = require('cors');
 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// app.use(cors({
-//   origin: '*', 
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-//   credentials: true 
-// }));
+app.use(cors({
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true 
+}));
 
 
 app.use(bodyParser.json());
