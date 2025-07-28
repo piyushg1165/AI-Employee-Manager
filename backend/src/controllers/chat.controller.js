@@ -1,11 +1,25 @@
 const Chat = require('../models/chat.model.js');
 
-const getAllChats = {
+const getAllChats = async (req, res) => {
 
+    const chats = Chat.find();
+
+    try {
+        
+    } catch (error) {
+        
+    }
+    
+};
+const getChatById = async (req, res) => {
+
+    
+};
+const getAllMessages = async (req, res) => {
+
+    
 };
 
-const getChatById = {
 
-};
 
 module.exports = {getAllChats, getChatById};

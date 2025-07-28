@@ -1,18 +1,7 @@
 const Message = require('../models/message.model');
 
 
-const getAllMessages = async (req, res) => {
-    try {
-        const { id:chatId } = req.params;
-        const messages = await Message.find({ chatId })
 
-        res.status(200).json(messages);
-    } catch (error) {
-        console.error("Error in getMessages controller: ", error.message);
-        res.status(500).json({ message: "Internal server error" });
-    }
-
-};
 
 const createMessage = async (req, res) => {
 
@@ -40,4 +29,4 @@ try {
 
 };
 
-module.exports = { getAllMessages, createMessage};
+module.exports = {  createMessage};
