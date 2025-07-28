@@ -4,7 +4,6 @@ const messageSchema = new mongoose.Schema({
     chatId: {
         type: String,
         required: true,
-        unique: true
     },
     prompt: {
         type: String,
