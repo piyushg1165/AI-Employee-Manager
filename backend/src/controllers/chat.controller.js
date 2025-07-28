@@ -42,6 +42,10 @@ const createChat = async (req, res) => {
     const { userId, chatName } = req.body;
 
     try {
+
+        if(!userId || !chatName ) {
+            return res.status(400).json({message: "All fields are required"});
+        }
         const newChat = await Chat.create({ userId, name:chatName });
         res.status(201).json({ chat: newChat });
     } catch (error) {
