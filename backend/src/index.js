@@ -1,15 +1,25 @@
-require('dotenv').config({
-  path: './.env',
+const dotenv = require('dotenv');
+dotenv.config();
+const {connectDB}=require('./db/mongodb')
+const express = require('express');
+const bodyParser = require('body-parser');
+const userRoutes = require('./routes/user.route.js');
+
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+
+app.use(bodyParser.json());
+
+app.use("/user", userRoutes);
+
+
+app.get('/', (req, res) => {
+    res.send('Service is running');
 });
-const { app } = require('./app.js');
-const connectDB = require('./db/index.js');
 
-(async () => {
-  // connect mongodb database
-  await connectDB();
-
-  // start http server
-  app.listen(process.env.PORT, () => {
-    console.log(`🚝 Server is running on port ${process.env.PORT}`);
-  });
-})();
+app.listen(PORT, () => {
+    console.log('Server is running on port', PORT);
+    connectDB();
+});
