@@ -92,9 +92,23 @@ const login = async (req, res) => {
     }
 };
 
+const getCurrentUser = async (req, res) => {
+    const {id} = req.body;
+    try {
+        const user = await User.findById(id).select("-password");
+        if(!user){
+            return res.status(404).json({message: "User not found"});
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        console.log("Error in getCurrentUser controller", error);
+        res.status(500).json({message: "Internal Server Error"})
+    }
+};
 
 
 
-module.exports = { register, login, logout }
+
+module.exports = { register, login, logout, getCurrentUser }
  
 
