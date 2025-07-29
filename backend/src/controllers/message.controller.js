@@ -1,4 +1,11 @@
 const Message = require('../models/message.model');
+const { qdrantClient } = require('../db/qdrantdb.js');
+const { getEmbedding } = require('../utils/transformer.js');
+const axios = require('axios');
+
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+console.log("OpenRouter API Key:", OPENROUTER_API_KEY);
 
 const createMessage = async (req, res) => {
 
@@ -48,6 +55,100 @@ const deleteMessage = async ( req, res ) => {
         }
 };
 
+const sendMessage = async (req, res) => {
+  const { message,  chatId} = req.body;
+
+  if(!chatId) {
+    return res.status(400).json({message: "chatId is required"});
+  }
+
+  if (!message) {
+    return res.status(400).json({ message: 'Message is required' });
+  }
+
+  // Step 1: Get Embedding
+  console.time('🧠 Embedding Generation');
+  const embeddingResult = await getEmbedding(message);
+  console.timeEnd('🧠 Embedding Generation');
+
+  if (!embeddingResult?.[0]?.data) {
+    return res.status(500).json({ message: 'Invalid embedding structure' });
+  }
+  const embedding = Array.from(embeddingResult[0].data);
+
+  const qdrantQuery = {
+    vector: embedding,
+    limit: 5,
+    score_threshold: 0.2,
+    with_payload: true,
+  };
+
+  // Step 2: Search Qdrant
+  let relevantData;
+  console.time('🔍 Qdrant Vector Search');
+  try {
+    relevantData = await qdrantClient.search('employees', qdrantQuery);
+  } catch (err) {
+    console.timeEnd('🔍 Qdrant Vector Search');
+    console.error('Qdrant search error:', err);
+    return res.status(500).json({ message: 'Error searching Qdrant vector DB' });
+  }
+  console.timeEnd('🔍 Qdrant Vector Search');
+
+  // Step 3: Prepare Context
+  const contextChunks = relevantData
+    .map((item) => JSON.stringify(item.payload))
+    .join('\n');
+
+  // Step 4: Call AI API
+  console.time('🤖 AI Response Generation');
+  try {
+    const aiResponse = await axios.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+              model: 'google/gemma-3n-e4b-it:free',
+
+        messages: [
+        //   {
+        //     role: 'system',
+        //     content:
+        //       'You are an AI assistant that answers user questions strictly using the context provided. Keep answers accurate and under 100 words.',
+        //   },
+          {
+            role: 'user',
+            content: `Context:\n${contextChunks}\n\nQuestion: ${message}`,
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    console.timeEnd('🤖 AI Response Generation');
+
+    const aiText =
+      aiResponse.data.choices?.[0]?.message?.content || 'No response from AI';
+
+      console.log(chatId);
+
+      await Message.create({chatId, prompt:message, result:aiText });
 
 
-module.exports = {  createMessage, deleteMessage};
+    // Step 5: Final Response
+    res.status(200).json({prompt:message, result:aiText}
+    );
+  } catch (err) {
+    if (err.response) {
+      console.error('OpenRouter error:', err.response.status, err.response.data);
+      return res.status(err.response.status).json({ message: err.response.data });
+    } else {
+      console.error('OpenRouter error:', err.message);
+      return res.status(500).json({ message: 'Error calling OpenRouter API' });
+    }
+  }
+};
+
+module.exports = { createMessage, deleteMessage, sendMessage };
