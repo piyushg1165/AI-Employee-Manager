@@ -1,4 +1,5 @@
 const Chat = require('../models/chat.model.js');
+const Message = require('../models/message.model.js');
 
 const getAllChats = async (req, res) => {
     const { userId } = req.body; 
@@ -33,9 +34,22 @@ const getChatById = async (req, res) => {
     }
     
 };
-const getAllMessages = async (req, res) => {
+const getAllMessagesByChatId = async (req, res) => {
 
-    
+    const { chatId } = req.body;
+
+    try {
+        const messages = await Message.find({ chatId });
+
+        if (!messages || messages.length === 0) {
+            return res.status(404).json({ message: "Messages do not exist" });
+        }
+
+        res.status(200).json({ messages });
+    } catch (error) {
+        console.log("Error in getAllMessagesByChatId controller", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 };
 
 const createChat = async (req, res) => {
@@ -54,4 +68,4 @@ const createChat = async (req, res) => {
     }
 };
 
-module.exports = {getAllChats, getChatById, getAllMessages, createChat};
+module.exports = {getAllChats, getChatById, getAllMessagesByChatId, createChat};
