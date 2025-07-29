@@ -5,7 +5,7 @@ const { createMessage, deleteMessage} = require('../controllers/message.controll
 const router = express.Router();
 
 router.route('/createMessage').post(createMessage);
-router.route('/deleteMessage').post(deleteMessage);
+router.route('/deleteMessage/:id').post(deleteMessage);
 
 
 

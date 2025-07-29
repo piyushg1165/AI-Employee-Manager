@@ -3,9 +3,9 @@ const { getAllChats, getChatById, getAllMessagesByChatId, createChat } = require
 
 const router = express.Router();
 
-router.get('/getAllChats', getAllChats); 
-router.get('/getChatById/', getChatById);
-router.get('/getAllMessagesByChatId', getAllMessagesByChatId);
+router.get('/getAllChats/:userId', getAllChats); 
+router.get('/getChatById/:id', getChatById);
+router.get('/getAllMessagesByChatId/:chatId', getAllMessagesByChatId);
 router.post('/createChat', createChat);
 
 module.exports = router;
