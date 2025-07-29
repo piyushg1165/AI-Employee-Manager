@@ -12,6 +12,7 @@ res.cookie("token", token, {
   httpOnly: true,
   sameSite: isProduction ? "none" : "lax",
   secure: isProduction,
+  path: '/' // Ensure cookie is accessible across the application
 });
 
 
