@@ -7,13 +7,16 @@ const jwt = require('jsonwebtoken');
 
     const isProduction = process.env.NODE_ENV === "production";
 
-res.cookie("token", token, {
-  maxAge: 15 * 24 * 60 * 60 * 1000,
-  httpOnly: true,
-  sameSite: isProduction ? "strict" : "lax",
-  secure: isProduction,
-  path: '/' 
-});
+    const options = {
+      maxAge: 24 * 60 * 60 * 1000 * 7, // Cookie will expire after 7 day
+      httpOnly: true, // Cookie is only accessible via HTTP(S) and not client-side JavaScript
+      secure: process.env.NODE_ENV === 'production', // Cookie will only be sent over HTTPS if in production
+      sameSite: 'strict', // SameSite attribute to prevent CSRF attacks
+    };
+    // Set the cookie in the response
+res.cookie("token", token, options);
+
+
 
     return token;
 

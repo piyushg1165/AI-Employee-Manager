@@ -28,9 +28,9 @@ app.use(cookieParser());
 
 // app.use(bodyParser.json());
 
-app.use("/user", userRoutes);
-app.use('/message', messageRoutes);
-app.use('/chat', chatRoutes);
+app.use("/api/user", userRoutes);
+app.use('/api/message', messageRoutes);
+app.use('/api/chat', chatRoutes);
 
 
 app.get('/', (req, res) => {
