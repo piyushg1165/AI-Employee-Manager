@@ -68,4 +68,28 @@ const createChat = async (req, res) => {
     }
 };
 
-module.exports = {getAllChats, getChatById, getAllMessagesByChatId, createChat};
+const deleteChatById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+
+        const messages = await Message.find({ chatId: id });
+        if (messages && messages.length > 0) {
+            await Message.deleteMany({ chatId: id });
+        }
+
+        const deletedChat = await Chat.findByIdAndDelete(id);
+        if (deletedChat) {
+            console.log('Chat deleted successfully:', deletedChat);
+            res.status(200).json({ message: "Chat deleted successfully" });
+        } else {
+            console.log('No chat found with that ID.');
+            return res.status(404).json({ message: "Chat not found" });
+        }
+    } catch (error) {
+        console.error('Error deleting chat:', error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+module.exports = {getAllChats, getChatById, getAllMessagesByChatId, createChat, deleteChatById};
