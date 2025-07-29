@@ -2,7 +2,7 @@ const Chat = require('../models/chat.model.js');
 const Message = require('../models/message.model.js');
 
 const getAllChats = async (req, res) => {
-    const { userId } = req.body; 
+    const { userId } = req.params; 
 
     try {
         const chats = await Chat.find({ userId });
@@ -18,7 +18,7 @@ const getAllChats = async (req, res) => {
     }
 };
 const getChatById = async (req, res) => {
-    const { id } = req.body;
+    const { id } = req.params;
 
     try {
         const chat = await Chat.findById(id);
@@ -36,7 +36,7 @@ const getChatById = async (req, res) => {
 };
 const getAllMessagesByChatId = async (req, res) => {
 
-    const { chatId } = req.body;
+    const { chatId } = req.params;
 
     try {
         const messages = await Message.find({ chatId });

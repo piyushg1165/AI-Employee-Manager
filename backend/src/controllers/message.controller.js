@@ -31,7 +31,7 @@ const createMessage = async (req, res) => {
 
 const deleteMessage = async ( req, res ) => {
 
-    const {id} = req.body;
+    const {id} = req.params;
 
     try {
             const deletedMessage = await Message.findByIdAndDelete(id);
