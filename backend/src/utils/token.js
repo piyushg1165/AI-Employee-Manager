@@ -5,12 +5,22 @@ const jwt = require('jsonwebtoken');
         expiresIn: '15d',
     });
 
-    res.cookie("token", token, {
-        maxAge: 15*24*60*60*1000,
-        httpOnly: true,
-        sameSite: "none",
-        secure: process.env.NODE_ENV !== "development",
-    });
+    const isProduction = process.env.NODE_ENV === "production";
+
+res.cookie("token", token, {
+  maxAge: 15 * 24 * 60 * 60 * 1000,
+  httpOnly: true,
+  sameSite: isProduction ? "none" : "lax",
+  secure: isProduction,
+});
+
+
+   res.cookie("token", token, {
+    maxAge: 15 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
+});
 
     return token;
 
