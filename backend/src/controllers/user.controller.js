@@ -97,7 +97,7 @@ const login = async (req, res) => {
 };
 
 const getCurrentUser = async (req, res) => {
-    const {id} = req.params;
+    const {id} = req.user;
     try {
         const user = await User.findById(id).select("-password");
         if(!user){
