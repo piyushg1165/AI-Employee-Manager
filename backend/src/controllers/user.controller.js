@@ -81,9 +81,14 @@ const login = async (req, res) => {
 
  const logout = (req, res) => {
     try {
-        res.cookie("jwt", "", {
-            maxAge: 0
+        const user = req.user;
+
+        res.clearCookie("token", {
+            httpOnly: true,
+            sameSite: "strict",
+            secure: process.env.NODE_ENV !== "development",
         });
+
         res.status(200).json({message: "Logged out successfully"});
     } catch (error) {
         console.log("Error in logout controller", error.message);
@@ -110,5 +115,5 @@ const getCurrentUser = async (req, res) => {
 
 
 module.exports = { register, login, logout, getCurrentUser }
- 
+
 
