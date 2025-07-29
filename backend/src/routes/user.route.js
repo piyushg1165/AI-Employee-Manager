@@ -5,9 +5,9 @@ const router = express.Router();
 
 router.route('/register').post(register);
 router.route('/login').post(login);
-router.route('/:id').get(getCurrentUser);
-
+router.route('/:id').get(verifyJWT, getCurrentUser);
 router.route('/logout').post(verifyJWT, logout);
+
 
 
 module.exports = router;
