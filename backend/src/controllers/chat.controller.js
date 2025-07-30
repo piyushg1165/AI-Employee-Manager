@@ -52,6 +52,25 @@ const getAllMessagesByChatId = async (req, res) => {
     }
 };
 
+const getChatsByUserId = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const chats = await Chat.find({ userId });
+
+        if (!chats || chats.length === 0) {
+            return res.status(404).json({ message: "Chats do not exist" });
+        }
+
+        res.status(200).json({ chats });
+    } catch (error) {
+        console.log("Error in getChatsByUserId controller", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+
+
 const createChat = async (req, res) => {
     const { userId, chatName } = req.body;
 
@@ -92,4 +111,4 @@ const deleteChatById = async (req, res) => {
     }
 };
 
-module.exports = {getAllChats, getChatById, getAllMessagesByChatId, createChat, deleteChatById};
+module.exports = {getAllChats, getChatById, getAllMessagesByChatId, createChat, deleteChatById, getChatsByUserId};
