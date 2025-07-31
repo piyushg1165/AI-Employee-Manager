@@ -2,6 +2,7 @@ const Message = require('../models/message.model');
 const { qdrantClient } = require('../db/qdrantdb.js');
 const { getEmbedding } = require('../utils/transformer.js');
 const axios = require('axios');
+const Chat = require('../models/chat.model');
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
@@ -132,10 +133,17 @@ const sendMessage = async (req, res) => {
     const aiText =
       aiResponse.data.choices?.[0]?.message?.content || 'No response from AI';
 
-      console.log(chatId);
+      
 
       await Message.create({chatId, prompt:message, result:aiText });
 
+      const words = message.split(/\s+/);
+const newName = words.slice(0, 5).join(' ');
+
+      const chat = await Chat.findById(chatId);
+if (chat.name === "new chat") {
+  await Chat.findByIdAndUpdate(chatId, { name: newName }, { new: true });
+}
 
     // Step 5: Final Response
     res.status(200).json({prompt:message, result:aiText}
