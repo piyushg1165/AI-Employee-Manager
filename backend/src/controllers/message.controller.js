@@ -5,7 +5,6 @@ const axios = require('axios');
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-console.log("OpenRouter API Key:", OPENROUTER_API_KEY);
 
 const createMessage = async (req, res) => {
 
@@ -98,7 +97,8 @@ const sendMessage = async (req, res) => {
   // Step 3: Prepare Context
   const contextChunks = relevantData
     .map((item) => JSON.stringify(item.payload))
-    .join('\n');
+    .join('\n')
+    
 
   // Step 4: Call AI API
   console.time('🤖 AI Response Generation');
