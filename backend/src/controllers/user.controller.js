@@ -110,9 +110,35 @@ const getCurrentUser = async (req, res) => {
     }
 };
 
+const updateUser = async(req, res) => {
+    const { id } = req.user;
+    const { firstName, lastName, email, password } = req.body;
+    let hashedPassword;
+    
+    if(password){
+        const salt = await bcrypt.genSalt(10);
+     hashedPassword = await bcrypt.hash(password, salt);
+    }
+    try {
+        const updatedUser = await User.findByIdAndUpdate(id, {
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword
+        });
+        if(!updatedUser){
+            return res.status(404).json({message: "User not found"});
+        }
+          res.status(200).json(updatedUser);
+    } catch (error) {
+        console.log("Error in updateUser controller", error);
+        res.status(500).json({message: "Internal Server Error"})
+    }
+};
 
 
 
-module.exports = { register, login, logout, getCurrentUser }
+
+module.exports = { register, login, logout, getCurrentUser, updateUser }
  
 
