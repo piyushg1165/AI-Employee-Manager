@@ -111,4 +111,26 @@ const deleteChatById = async (req, res) => {
     }
 };
 
-module.exports = {getAllChats, getChatById, getAllMessagesByChatId, createChat, deleteChatById, getChatsByUserId};
+const deleteHistory = async (req, res) => {
+    const { id } = req.user; 
+    try {
+        const chats = await Chat.find({ userId: id });
+
+        if (!chats || chats.length === 0) {
+            return res.status(404).json({ message: "No chat history found" });
+        }
+
+        const chatIds = chats.map(chat => chat._id);
+
+        await Message.deleteMany({ chatId: { $in: chatIds } });
+
+        await Chat.deleteMany({ userId: id });
+
+        res.status(200).json({ message: "All chat history deleted successfully" });
+    } catch (error) {
+        console.error('Error deleting history:', error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+module.exports = {getAllChats, getChatById, getAllMessagesByChatId, createChat, deleteChatById, getChatsByUserId, deleteHistory};
