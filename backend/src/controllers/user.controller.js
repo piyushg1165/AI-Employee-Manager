@@ -130,7 +130,7 @@ const updateUser = async(req, res) => {
       updatedData.profilePic = req.file.path; // Save Cloudinary URL
     }
          if (password) updatedData.password = hashedPassword;
-        const updatedUser = await User.findByIdAndUpdate(id, updatedData);
+        const updatedUser = await User.findByIdAndUpdate(id, updatedData, {new: true});
         if(!updatedUser){
             return res.status(404).json({message: "User not found"});
         }

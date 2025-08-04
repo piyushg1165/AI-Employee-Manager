@@ -113,7 +113,7 @@ const sendMessage = async (req, res) => {
         //   {
         //     role: 'system',
         //     content:
-        //       'You are an AI assistant that answers user questions strictly using the context provided. Keep answers accurate and under 100 words.',
+        //       'You are an AI assistant named Virox AI that answers user questions strictly using the context provided. Keep answers accurate and under 100 words.',
         //   },
           {
             role: 'user',
