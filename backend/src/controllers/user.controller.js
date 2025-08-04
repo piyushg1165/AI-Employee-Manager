@@ -2,6 +2,7 @@ const User = require('../models/user.model.js');
 const bcrypt = require('bcrypt');
 const Token = require('../utils/token.js');
 const upload = require("../middleware/multer.js");
+const cloudinary = require("../utils/cloudinary");
 
 const register = async (req, res) => {
     const {firstName, lastName, email, password} = req.body;
@@ -111,34 +112,42 @@ const getCurrentUser = async (req, res) => {
     }
 };
 
-const updateUser = async(req, res) => {
+const updateUser = async (req, res) => {
     const { id } = req.user;
     const { firstName, lastName, email, password } = req.body;
     let hashedPassword;
-    
-    if(password){
+
+    if (password) {
         const salt = await bcrypt.genSalt(10);
-     hashedPassword = await bcrypt.hash(password, salt);
-    }     
-    try {
-        const updatedData = {
-            firstName,
-            lastName,
-            email,
-        }
-        if (req.file && req.file.path) {
-      updatedData.profilePic = req.file.path; // Save Cloudinary URL
+        hashedPassword = await bcrypt.hash(password, salt);
     }
-         if (password) updatedData.password = hashedPassword;
-        const updatedUser = await User.findByIdAndUpdate(id, updatedData, {new: true});
-        if(!updatedUser){
-            return res.status(404).json({message: "User not found"});
+    try {
+        const updatedData = { firstName, lastName, email };
+
+        const user = await User.findById(id);
+
+       
+        if (req.file && req.file.path && user && user.profilePic) {
+            
+            const urlParts = user.profilePic.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            const publicId = `user_profiles/${fileName.split('.')[0]}`;
+            await cloudinary.uploader.destroy(publicId);
+            updatedData.profilePic = req.file.path; 
+        } else if (req.file && req.file.path) {
+            updatedData.profilePic = req.file.path;
         }
-        console.log(updatedUser)
-          res.status(200).json(updatedUser);
+
+        if (password) updatedData.password = hashedPassword;
+
+        const updatedUser = await User.findByIdAndUpdate(id, updatedData, { new: true });
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json(updatedUser);
     } catch (error) {
         console.log("Error in updateUser controller", error);
-        res.status(500).json({message: "Internal Server Error"})
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };
 
@@ -146,5 +155,5 @@ const updateUser = async(req, res) => {
 
 
 module.exports = { register, login, logout, getCurrentUser, updateUser }
- 
+
 
