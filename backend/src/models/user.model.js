@@ -24,6 +24,10 @@
         },
         token: {
             type: String,
+        },
+        profilePic: {
+            type: String,
+            default: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.istockphoto.com%2Fphotos%2Fuser-profile&psig=AOvVaw3qIfanXxJ6JRqTt2oG2O6c&ust=1754383101386000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCKido77g8I4DFQAAAAAdAAAAABAE"
         }
         
     },{ timestamps: true });

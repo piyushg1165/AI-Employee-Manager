@@ -1,6 +1,7 @@
 const User = require('../models/user.model.js');
 const bcrypt = require('bcrypt');
-const Token = require('../utils/token.js')
+const Token = require('../utils/token.js');
+const upload = require("../middleware/multer.js");
 
 const register = async (req, res) => {
     const {firstName, lastName, email, password} = req.body;
@@ -118,17 +119,22 @@ const updateUser = async(req, res) => {
     if(password){
         const salt = await bcrypt.genSalt(10);
      hashedPassword = await bcrypt.hash(password, salt);
-    }
+    }     
     try {
-        const updatedUser = await User.findByIdAndUpdate(id, {
+        const updatedData = {
             firstName,
             lastName,
             email,
-            password: hashedPassword
-        });
+        }
+        if (req.file && req.file.path) {
+      updatedData.profilePic = req.file.path; // Save Cloudinary URL
+    }
+         if (password) updatedData.password = hashedPassword;
+        const updatedUser = await User.findByIdAndUpdate(id, updatedData);
         if(!updatedUser){
             return res.status(404).json({message: "User not found"});
         }
+        console.log(updatedUser)
           res.status(200).json(updatedUser);
     } catch (error) {
         console.log("Error in updateUser controller", error);
