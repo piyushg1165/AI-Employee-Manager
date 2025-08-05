@@ -1,5 +1,3 @@
-// loadTransformer.js (CommonJS compatible)
-
 let extractor = null;
 
 async function loadEmbeddingModel() {
@@ -14,11 +12,17 @@ async function getEmbedding(text) {
   try {
     const model = await loadEmbeddingModel();
     const input = `Represent this sentence for semantic search: ${text}`;
-    const output = await model(input, { pooling: 'mean', normalize: true });
-    const arr = Array.from(output);
-    return arr;
+    const output = await model(input, {
+      pooling: 'mean',
+      normalize: true
+    });
+
+    const embedding = Array.isArray(output[0]) ? Array.from(output[0]) : Array.from(output);
+
+
+    return embedding;
   } catch (err) {
-    console.error('Error in getEmbedding:', err);
+    console.error('❌ Error generating embedding:', err);
     return undefined;
   }
 }

@@ -12,7 +12,7 @@ function formatEmployee(emp) {
     employment_type,
     experience_years,
     is_remote,
-    skills = [],
+    skills = '',
     projects = [],
   } = emp;
 
@@ -32,14 +32,29 @@ function formatEmployee(emp) {
 
   const joiningText = `They joined the company on ${joining_date} and currently hold a ${employment_type} position.`;
 
+  // Normalize skills if provided as comma-separated string
+  const skillArray = Array.isArray(skills)
+    ? skills
+    : typeof skills === 'string'
+      ? skills.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
   const skillText =
-    skills.length > 0
-      ? `${name}'s core technical skills include ${skills.join(', ')}.`
+    skillArray.length > 0
+      ? `${name}'s core technical skills include ${skillArray.join(', ')}.`
       : `${name} is continuously learning new technologies to expand their skill set.`;
 
+  // Normalize projects if provided as comma-separated string
+  const projectArray = Array.isArray(projects)
+    ? projects
+    : typeof projects === 'string'
+      ? projects.split(',').map(p => p.trim()).filter(Boolean)
+      : [];
+
+  // ✅ Fixed: Use projectArray instead of projects
   const projectText =
-    projects.length > 0
-      ? `${name} has worked on key projects such as ${projects.join(', ')}.`
+    projectArray.length > 0
+      ? `${name} has worked on key projects such as ${projectArray.join(', ')}.`
       : `${name} is looking forward to contributing to exciting projects.`;
 
   const contactText = `They can be contacted via email at ${email} or by phone at ${phone}.`;
@@ -63,6 +78,7 @@ ${intro} ${name} is currently working in the ${department} department, reporting
 ${skillText} ${projectText} ${contactText}
 `.trim();
 }
+
 function extractFiltersAndBuildQdrant(text) {
   const filters = {};
   const lowerText = text.toLowerCase();
@@ -123,10 +139,19 @@ function extractFiltersAndBuildQdrant(text) {
     'Firebase',
     'Jest',
   ];
-  const matchedSkills = skillList.filter((skill) =>
-    lowerText.includes(skill.toLowerCase())
-  );
-  if (matchedSkills.length > 0) filters.skills = matchedSkills;
+  let matchedSkills = [];
+
+  const regexSkillList = /skills?:?\s*([a-zA-Z0-9,\s\.\-]+)/i;
+  const skillMatch = text.match(regexSkillList);
+  if (skillMatch) {
+    const rawSkills = skillMatch[1];
+    matchedSkills = rawSkills
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => skillList.map(skill => skill.toLowerCase()).includes(s.toLowerCase()));
+
+    if (matchedSkills.length > 0) filters.skills = matchedSkills;
+  }
 
   // Qdrant-compatible filter object
   const qdrantFilter = {
