@@ -66,7 +66,28 @@ const sendMessage = async (req, res) => {
     return res.status(400).json({ message: 'Message is required' });
   }
 
-  // Step 1: Get Embedding
+  // Step 1: Get Chat History for Context
+  console.time('📚 Chat History Retrieval');
+  let chatHistory = [];
+  try {
+    const previousMessages = await Message.find({ chatId }).sort({ createdAt: 1 }).limit(10);
+    chatHistory = previousMessages.flatMap(msg => {
+      const messages = [];
+      if (msg.prompt) {
+        messages.push({ role: 'user', content: msg.prompt });
+      }
+      if (msg.result) {
+        messages.push({ role: 'assistant', content: msg.result });
+      }
+      return messages;
+    });
+  } catch (err) {
+    console.error('Error fetching chat history:', err);
+    // Continue without chat history if there's an error
+  }
+  console.timeEnd('📚 Chat History Retrieval');
+
+  // Step 2: Get Embedding
   console.time('🧠 Embedding Generation');
   const embeddingResult = await getEmbedding(message);
   console.timeEnd('🧠 Embedding Generation');
@@ -83,7 +104,7 @@ const sendMessage = async (req, res) => {
     with_payload: true,
   };
 
-  // Step 2: Search Qdrant
+  // Step 3: Search Qdrant
   let relevantData;
   console.time('🔍 Qdrant Vector Search');
   try {
@@ -95,31 +116,38 @@ const sendMessage = async (req, res) => {
   }
   console.timeEnd('🔍 Qdrant Vector Search');
 
-  // Step 3: Prepare Context
+  // Step 4: Prepare Context
   const contextChunks = relevantData
     .map((item) => JSON.stringify(item.payload))
-    .join('\n')
-    
+    .join('\n');
 
-  // Step 4: Call AI API
+  // Step 5: Prepare Messages Array with Chat History
+  const messages = [
+    {
+      role: 'user',
+      content: 'You are an AI assistant named Virox AI that answers user questions using the provided context and conversation history. Keep answers accurate and conversational, referencing previous messages when relevant.'
+    }
+  ];
+
+  // Add chat history to messages
+  if (chatHistory.length > 0) {
+    messages.push(...chatHistory);
+  }
+
+  // Add current message with context
+  messages.push({
+    role: 'user',
+    content: `Context:\n${contextChunks}\n\nQuestion: ${message}`
+  });
+
+  // Step 6: Call AI API
   console.time('🤖 AI Response Generation');
   try {
     const aiResponse = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-              model: 'google/gemma-3n-e4b-it:free',
-
-        messages: [
-        //   {
-        //     role: 'system',
-        //     content:
-        //       'You are an AI assistant named Virox AI that answers user questions strictly using the context provided. Keep answers accurate and under 100 words.',
-        //   },
-          {
-            role: 'user',
-            content: `Context:\n${contextChunks}\n\nQuestion: ${message}`,
-          },
-        ],
+        model: 'google/gemma-3n-e4b-it:free',
+        messages: messages,
       },
       {
         headers: {
