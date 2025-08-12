@@ -70,6 +70,7 @@ const login = async (req, res) => {
 
         Token(user._id,res);
 
+        console.log("User logged in:", user);
         res.status(200).json({
                     _id: user._id,
                     firstName: user.firstName,

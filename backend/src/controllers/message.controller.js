@@ -99,7 +99,7 @@ const sendMessage = async (req, res) => {
 
   const qdrantQuery = {
     vector: embedding,
-    limit: 5,
+    limit: 10,
     score_threshold: 0.2,
     with_payload: true,
   };
@@ -146,7 +146,7 @@ const sendMessage = async (req, res) => {
     const aiResponse = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'google/gemma-3n-e4b-it:free',
+        model: 'openai/gpt-oss-20b:free',
         messages: messages,
       },
       {

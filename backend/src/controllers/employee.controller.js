@@ -97,6 +97,7 @@ const uploadEmployeesFromExcel = async (req, res) => {
 
     const points = [];
 
+    
     for (const employees of data) {
       const emp = {
         employee_id,
@@ -186,7 +187,7 @@ const uploadEmployeesFromExcel = async (req, res) => {
     res.status(200).json({ message: `✅ ${points.length} employees uploaded to Qdrant.` });
 
   } catch (err) {
-    console.error('❌ Excel upload error:', err);
+    console.log('❌ Excel upload error:', err);
     res.status(500).json({ error: err.message, stack: err.stack });
   }
 };

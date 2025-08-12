@@ -1,0 +1,20 @@
+{
+  "employees": [
+    {
+      "employee_id": "EMP001",
+      "name": "Jayash",
+      "email": "jayash@example.com",
+      "phone": "+91-9876543210",
+      "position": "Frontend Developer",
+      "joining_date": "2023-06-15",
+      "employment_type": "Full-Time",
+      "department": "Engineering",
+      "location": "Mumbai",
+      "manager": "Rahul Sharma",
+      "experience_years": 2,
+      "is_remote": false,
+      "skills": ["React", "JavaScript", "HTML", "CSS", "Redux"],
+      "projects": ["Internal Dashboard", "Marketing Website"]
+    }
+  ]
+}
