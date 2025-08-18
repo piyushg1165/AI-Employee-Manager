@@ -39,7 +39,7 @@ const UserProfile = ({
 		department: "",
 		location: "",
 		manager: "",
-		experience_years: "",
+		experience_years: 0,
 		is_remote: false,
 		skills: [],
 		projects: [],
@@ -137,7 +137,7 @@ const UserProfile = ({
 		setEmployeeLoading(true);
 		try {
 			const response = await axios.post(
-				"/api/employee/upload-employee",
+				"http://localhost:8000/api/employee/upload-employee-neon",
 				employeeForm,
 				{
 					withCredentials: true,
@@ -158,7 +158,7 @@ const UserProfile = ({
 					department: "",
 					location: "",
 					manager: "",
-					experience_years: "",
+					experience_years: 0,
 					is_remote: false,
 					skills: [],
 					projects: [],
@@ -218,7 +218,7 @@ const UserProfile = ({
 			formData.append("file", selectedFile);
 
 			const response = await axios.post(
-				"/api/employee/upload-excel-employee",
+				"http://localhost:8000/api/employee/upload-excel-employee",
 				formData,
 				{
 					headers: {
@@ -306,7 +306,7 @@ const UserProfile = ({
 				data.append("image", formData.profilePic);
 			}
 
-			const response = await axios.put("/api/user/update-user", data, {
+			const response = await axios.put("http://localhost:8000/api/user/update-user", data, {
 				headers: {
 					"Content-Type": "multipart/form-data",
 				},

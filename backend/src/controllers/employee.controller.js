@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const { formatEmployee } = require('../utils/formatEmployee.js');
 const fs = require('fs');
 const xlsx = require('xlsx');
+const { pgPool } = require("../db/postgres.js");
 
 const uploadSingleEmployee = async (req, res) => {
   try {
@@ -85,7 +86,6 @@ const uploadSingleEmployee = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
-
 
 const uploadEmployeesFromExcel = async (req, res) => {
   
@@ -192,4 +192,84 @@ const uploadEmployeesFromExcel = async (req, res) => {
   }
 };
 
-module.exports = {uploadEmployeesFromExcel , uploadSingleEmployee}
+const uploadSingleEmployeeToNeon = async (req, res) => {
+  try {
+    const emp = {
+      employee_id,
+      name,
+      email,
+      phone,
+      position,
+      joining_date,
+      employment_type,
+      department,
+      location,
+      manager,
+      experience_years,
+      is_remote,
+      skills,
+      projects
+    } = req.body;
+
+    // ✅ Validation
+    if (
+      !employee_id || !name || !email || !phone || !position ||
+      !joining_date || !employment_type || !department ||
+      !location || !manager || experience_years === undefined ||
+      is_remote === undefined || !skills || !projects
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // ✅ Insert into Neon (with UPSERT)
+    const query = `
+      INSERT INTO employees (
+        id, name, email, phone, position, joining_date,
+        employment_type, department, location, manager,
+        experience_years, is_remote, skills, projects
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,
+        $7,$8,$9,$10,
+        $11,$12,$13,$14
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        email = EXCLUDED.email,
+        phone = EXCLUDED.phone,
+        position = EXCLUDED.position,
+        joining_date = EXCLUDED.joining_date,
+        employment_type = EXCLUDED.employment_type,
+        department = EXCLUDED.department,
+        location = EXCLUDED.location,
+        manager = EXCLUDED.manager,
+        experience_years = EXCLUDED.experience_years,
+        is_remote = EXCLUDED.is_remote,
+        skills = EXCLUDED.skills,
+        projects = EXCLUDED.projects;
+    `;
+
+    await pgPool.query(query, [
+      employee_id,
+      name,
+      email,
+      phone,
+      position,
+      joining_date,
+      employment_type,
+      department,
+      location,
+      manager,
+      experience_years,
+      is_remote,
+      skills,     
+      projects    
+    ]);
+
+    res.status(200).json({ message: "✅ Employee uploaded to Neon Postgres" });
+
+  } catch (error) {
+    console.error("Error uploading employee:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+module.exports = {uploadEmployeesFromExcel , uploadSingleEmployee, uploadSingleEmployeeToNeon}

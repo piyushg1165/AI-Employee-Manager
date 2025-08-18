@@ -90,7 +90,7 @@ export default function UpdateProfile() {
 				data.append("image", formData.profilePic);
 			}
 
-			const response = await axios.put("/api/user/update-user", data, {
+			const response = await axios.put("http://localhost:8000/api/user/update-user", data, {
 				headers: {
 					"Content-Type": "multipart/form-data",
 				},
