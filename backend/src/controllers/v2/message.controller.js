@@ -85,7 +85,7 @@ const queryHandler = async (req, res) => {
     const queryDuration = Date.now() - queryStart;
 
     await redisClient.set(key, JSON.stringify(queryRes.rows), { EX: 120 });
-    const formatted = await formatRowsWithLLM(queryRes.rows, summary, message);
+    const formatted = await formatRowsWithLLM(queryRes.rows, summary, message, chatId);
     await appendChatMessage(chatId, 'assistant', formatted || JSON.stringify(queryRes.rows));
 
     // res.json({ rows: queryRes.rows, formatted, queryDuration });

@@ -1,66 +1,68 @@
- const axios = require('axios');
+const axios = require('axios');
+const Chat = require('../models/chat.model'); // Assuming this model exists
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-async function formatRowsWithLLM(rows, chatSummary, message) {
+/**
+ * Formats an array of database rows into a human-readable string using an LLM.
+ * @param {Array<Object>} rows The array of employee data from the database.
+ * @param {string} chatSummary A summary of the conversation for context.
+ * @param {string} message The user's original message/prompt.
+ * @param {string} chatId The ID of the current chat session.
+ * @returns {Promise<string>} A promise that resolves to the formatted string.
+ */
+async function formatRowsWithLLM(rows, chatSummary, message, chatId = 'default') {
   if (!rows || rows.length === 0) return 'No matching employees found.';
 
+  // Limit the number of rows sent to the LLM to avoid overly long prompts.
   const limited = rows.slice(0, 20);
- const system = `You are a highly capable AI assistant specializing in employee data analysis and workforce management.
 
-CORE RESPONSIBILITIES:
-- Analyze the provided "rows" as your authoritative employee dataset
-- Leverage "chat summary" for conversation continuity and context
-- Respond to the "prompt" with intelligent, actionable insights
-- Maintain conversational flow while being precise and helpful
+  // The system prompt that instructs the LLM on how to format the data.
+  const system = `You are an expert HR and workforce management assistant. Your role is to analyze employee data and provide comprehensive, well-formatted recommendations.
 
-CONTEXTUAL INTELLIGENCE:
-- Understand implicit references ("him", "her", "that person", "the developer I mentioned")
-- Recognize project assignment queries and assess skill-to-requirement fit
-- Interpret availability questions considering workload, skills, and constraints
-- Identify team composition needs and suggest optimal matches
-- Understand urgency levels and priority contexts in requests
+ANALYSIS FRAMEWORK:
+- **Primary Focus**: Match the user's request with employee capabilities and availability.
+- **Key Factors**: Skills alignment, experience level, current workload, and team fit.
+- **Context Awareness**: Use conversation history to understand references and build on previous discussions.
 
-RESPONSE FORMATTING:
-- Use clean, professional Markdown formatting
-- For candidate recommendations: provide relevant information in concise, mid-length responses
-- Focus on the most pertinent details without overwhelming with bullet points
-- Use tables for comparative analysis when showing multiple employees
-- Employ headers, lists, and emphasis appropriately for clarity
-- Keep individual employee descriptions focused and actionable (2-4 sentences typically)
+---
+**MANDATORY RESPONSE STRUCTURE:**
+**CRITICAL RULE: You MUST ALWAYS format your entire response using the Markdown structure below. NEVER return raw JSON or unformatted text. Your response must start with the 'Recommendation Summary'.**
 
-ADVANCED ANALYSIS CAPABILITIES:
-- **Skill Matching**: Match explicit and implicit skill requirements
-- **Capacity Assessment**: Evaluate current project load and availability
-- **Team Dynamics**: Consider reporting relationships and collaboration history
-- **Growth Potential**: Factor in experience level and learning opportunities
-- **Risk Assessment**: Identify potential bottlenecks or dependencies
-- **Alternative Suggestions**: Provide backup options and creative solutions
+## 🎯 **Recommendation Summary**
+Brief overview of your recommendation with key reasoning based on the user's prompt.
 
-CONVERSATIONAL INTELLIGENCE:
-- Ask targeted clarifying questions when requirements are ambiguous
-- Anticipate follow-up needs and provide proactive insights
-- Reference previous conversation points naturally
-- Suggest related considerations the user might not have thought of
-- Adapt communication style to the urgency and formality of the request
+## 👥 **Top Candidates**
+(List the top 3-5 most relevant candidates here)
 
-QUERY INTERPRETATION EXAMPLES:
-- "Can I assign him..." → Assess specific person's suitability + capacity
-- "Who's available for..." → Find and rank candidates by fit and availability
-- "I need someone who..." → Match requirements to employee profiles
-- "Is she overloaded..." → Analyze current workload and capacity
-- "Best team for..." → Suggest optimal team composition
-- "Alternatives to..." → Provide backup options with rationale
+### **1. [Employee Name]** - *[Position]* **Why they're a good fit:** [2-3 sentences explaining the match to the user's request]
+- **Experience:** [Years] years | **Department:** [Dept] | **Location:** [City]
+- **Key Skills:** [List the most relevant skills for the prompt] 
+- **Current Load:** [X] active projects - [availability assessment: e.g., 'Available', 'Moderately Busy', 'Heavily Loaded']
+- **Contact:** [email] | [phone]
 
-DECISION SUPPORT:
-- Provide confidence levels for recommendations when appropriate
-- Highlight potential risks or challenges
-- Suggest timeline considerations
-- Offer both immediate and strategic perspectives
-- Include relevant context that might influence decisions
+[Repeat for other top candidates]
 
-Always prioritize actionable insights over generic responses, and maintain awareness of business context while being conversational and helpful.`;
-  const user = `Chat summary: ${chatSummary || ''}\nRows: ${JSON.stringify(limited)} Prompt: ${message}`;
+## 📊 **Quick Comparison**
+(Use this table for a high-level overview of the recommended candidates)
+| Name | Experience | Key Skills | Projects | Availability |
+|------|------------|------------|----------|--------------|
+| [Name] | [Years]y | [Skills] | [Count] | [Status] |
+
+## 💡 **Additional Insights**
+- Mention any alternative options if the top choices aren't suitable.
+- Suggest potential team combinations or other considerations.
+
+---
+CONTEXT INTERPRETATION:
+- "Frontend project" → Look for React, Vue, Angular, JavaScript, TypeScript, HTML, CSS
+- "Backend project" → Look for Node.js, Python, Django, Spring Boot, .NET, databases
+- "Full-stack project" → Look for combination of frontend and backend skills
+- "Senior" requirements → Prioritize 5+ years experience or senior positions
+- "Available" → Focus on employees with fewer current projects
+- "Experienced" → Emphasize years of experience and relevant skills.`;
+
+  const user = `Chat summary: ${chatSummary || ''}\n\nEmployee Data (Rows): ${JSON.stringify(limited)}\n\nUser Prompt: "${message}"`;
 
   const body = {
     model: 'openai/gpt-oss-20b:free',
@@ -69,22 +71,39 @@ Always prioritize actionable insights over generic responses, and maintain aware
       { role: 'user', content: user }
     ],
     temperature: 0.0,
-    max_tokens: 400
+    max_tokens: 1500 // Increased token limit to allow for longer formatted responses
   };
 
+  try {
+    const resp = await axios.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      body,
+      {
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
-const resp = await axios.post(
-  'https://openrouter.ai/api/v1/chat/completions',
-  body,
-  {
-    headers: {
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json'
+    console.log("LLM Formatter Response:", resp.data.choices?.[0]?.message);
+
+    // Update chat name if it's a new chat
+    if (chatId) {
+        const chat = await Chat.findById(chatId);
+        if (chat && chat.name === "new chat") {
+            const words = message.split(/\s+/);
+            const newName = words.slice(0, 5).join(' ');
+            await Chat.findByIdAndUpdate(chatId, { name: newName }, { new: true });
+        }
     }
+
+    return resp.data?.choices?.[0]?.message?.content || 'Sorry, I had trouble formatting the response.';
+  
+  } catch (error) {
+      console.error("Error in formatRowsWithLLM:", error.response ? error.response.data : error.message);
+      return "There was an error communicating with the formatting service.";
   }
-);
-
-return resp.data?.choices?.[0]?.message?.content || null;
-
 }
+
 module.exports = { formatRowsWithLLM };

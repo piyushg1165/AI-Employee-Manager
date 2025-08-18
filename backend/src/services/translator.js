@@ -1,7 +1,15 @@
 const axios = require('axios');
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+/**
+ * Translates a natural language query into a SQL query object.
+ * @param {string} userMessage The natural language message from the user.
+ * @param {string} chatSummary A summary of the conversation so far for context.
+ * @returns {Promise<{sql: string, params: any[], clarification?: string}>} A promise that resolves to an object containing the SQL query, parameters, and an optional clarification message.
+ */
 async function translateNLToSQL(userMessage, chatSummary) {
+  // System prompt defining the role, schema, and rules for the AI model.
   const system = `You are an intelligent SQL generator for a Postgres DB with an employees table:
 
 TABLE SCHEMA:
@@ -46,7 +54,7 @@ QUERY INTELLIGENCE:
 - Default sorting: name ASC (unless context suggests otherwise)
 
 RESPONSE FORMAT:
-- Output ONLY valid JSON with double quotes
+- No matter what you have to return valid JSON as output
 - Required keys: "sql" (string), "params" (array)
 - Optional key: "clarification" (string) - use when user intent is truly ambiguous
 - If clarification needed, still provide a reasonable default query
@@ -69,63 +77,89 @@ EXAMPLES OF ENHANCED UNDERSTANDING:
 
 Always prioritize user intent over literal interpretation while maintaining SQL accuracy.`;
 
-
-  // const user = ` Make sure these Guidelines : ${system} = this is chat summary: ${chatSummary} = UserRequest: ${userMessage}\nReturn strict JSON.`;
-
-const body = {
-  model: 'openai/gpt-oss-20b:free',
-  messages: [
-    { role: 'system', content: system },
-    { role: 'system', content: `Conversation so far: ${chatSummary}` },
-    { role: 'user', content: userMessage }
-  ],
-  temperature: 0.0,
-  max_tokens: 800
-};
-
-
-
-try {
-  const resp = await axios.post(
-    'https://openrouter.ai/api/v1/chat/completions',
-    body,
-    {
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      validateStatus: () => true // let us handle non-2xx manually
-    }
-  );
-
-  if (resp.status < 200 || resp.status >= 300) {
-    throw new Error(
-      'LLM_TRANSLATE_ERROR: ' + resp.status + ' ' + JSON.stringify(resp.data)
-    );
-  }
-
-  let content = resp.data?.choices?.[0]?.message?.content;
-  if (!content) {
-    content = '';
-  }
+  const body = {
+    model: 'openai/gpt-oss-20b:free',
+    messages: [
+      { role: 'system', content: system },
+      { role: 'system', content: `Conversation so far: ${chatSummary}` },
+      { role: 'user', content: userMessage }
+    ],
+    temperature: 0.0,
+    max_tokens: 800
+  };
 
   try {
-    const parsed = JSON.parse(content);
-    console.log("Parsed JSON from LLM:", parsed);
-    if (!parsed.sql || !Array.isArray(parsed.params)) {
-      throw new Error('Translator returned invalid JSON fields');
-    }
-    return parsed;
-  } catch (err) {
-    const m = content.match(/\{[\s\S]*\}$/m);
-    if (!m) throw new Error('Could not parse JSON from LLM response');
-    return JSON.parse(m[0]);
-  }
+    const resp = await axios.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      body,
+      {
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        validateStatus: () => true // let us handle non-2xx manually
+      }
+    );
 
-} catch (error) {
-  // Axios already provides detailed error info
-  throw error;
-}
+    if (resp.status < 200 || resp.status >= 300) {
+      throw new Error(
+        'LLM_TRANSLATE_ERROR: ' + resp.status + ' ' + JSON.stringify(resp.data)
+      );
+    }
+
+    let content = resp.data?.choices?.[0]?.message?.content || '';
+
+    try {
+      // First, try to parse the content directly. This works if the LLM returns perfect JSON.
+      const parsed = JSON.parse(content);
+      console.log("Successfully parsed JSON directly from LLM:", parsed);
+      if (!parsed.sql || !Array.isArray(parsed.params)) {
+        throw new Error('Translator returned invalid JSON fields');
+      }
+      return parsed;
+    } catch (err) {
+      console.warn("Direct JSON parsing failed, attempting to extract from markdown.");
+      // If direct parsing fails, try to extract JSON from a markdown code block.
+      // This handles cases like ```json\n{...}\n```
+      const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+      if (jsonMatch && jsonMatch[1]) {
+        try {
+          const parsed = JSON.parse(jsonMatch[1]);
+          console.log("Successfully parsed JSON from markdown block:", parsed);
+          if (!parsed.sql || !Array.isArray(parsed.params)) {
+            throw new Error('Translator returned invalid JSON fields from markdown block');
+          }
+          return parsed;
+        } catch (parseError) {
+            console.error("Failed to parse JSON even after extracting from markdown.", parseError);
+        }
+      }
+
+      // As a final fallback, use the original broader regex.
+      const fallbackJsonMatch = content.match(/\{[\s\S]*\}/);
+      if (fallbackJsonMatch) {
+          try {
+            const parsed = JSON.parse(fallbackJsonMatch[0]);
+            console.log("Successfully parsed JSON with fallback regex:", parsed);
+            if (!parsed.sql || !Array.isArray(parsed.params)) {
+                throw new Error('Translator returned invalid JSON fields from fallback regex');
+            }
+            return parsed;
+          } catch (fallbackParseError) {
+             console.error("All parsing attempts failed.", fallbackParseError);
+             throw new Error("Could not parse JSON from LLM response after all attempts.");
+          }
+      }
+      
+      // If no JSON is found by any method, throw the final error.
+      throw new Error("Could not find any valid JSON in the LLM response.");
+    }
+
+  } catch (error) {
+    // Re-throw the error to be handled by the calling function.
+    console.error("An error occurred in translateNLToSQL:", error);
+    throw error;
+  }
 }
 
 module.exports = { translateNLToSQL };
