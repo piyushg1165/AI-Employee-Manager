@@ -41,6 +41,8 @@ const deleteMessage = async ( req, res ) => {
     const {id} = req.params;
 
     try {
+      console.log("Received delete request for ID:", id);
+
             const deletedMessage = await Message.findByIdAndDelete(id);
             if (deletedMessage) {
                 console.log('Message deleted successfully:', deletedMessage);

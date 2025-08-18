@@ -13,3 +13,10 @@ const connectDB = async ( ) => {
 };
 
 module.exports =  {connectDB} ;
+
+// import { MongoClient } from 'mongodb';
+
+// const mongoClient = new MongoClient(process.env.MONGO_URI, { useUnifiedTopology: true });
+// await mongoClient.connect();
+// const db = mongoClient.db(process.env.MONGO_DB || 'chatdb');
+// export const chats = db.collection('chats');
