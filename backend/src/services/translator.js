@@ -1,6 +1,11 @@
 const axios = require('axios');
 
+// It's good practice to ensure the API key is available.
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+if (!OPENROUTER_API_KEY) {
+    console.error("FATAL: OPENROUTER_API_KEY environment variable is not set.");
+    process.exit(1); // Exit if the key is missing.
+}
 
 /**
  * Translates a natural language query into a SQL query object.
@@ -9,8 +14,8 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
  * @returns {Promise<{sql: string, params: any[], clarification?: string}>} A promise that resolves to an object containing the SQL query, parameters, and an optional clarification message.
  */
 async function translateNLToSQL(userMessage, chatSummary) {
-  // System prompt defining the role, schema, and rules for the AI model.
-  const system = `You are an intelligent SQL generator for a Postgres DB with an employees table:
+    // System prompt defining the role, schema, and rules for the AI model.
+    const system = `You are an intelligent SQL generator for a Postgres DB with an employees table:
 
 TABLE SCHEMA:
 employees(
@@ -77,89 +82,88 @@ EXAMPLES OF ENHANCED UNDERSTANDING:
 
 Always prioritize user intent over literal interpretation while maintaining SQL accuracy.`;
 
-  const body = {
-    model: 'openai/gpt-oss-20b:free',
-    messages: [
-      { role: 'system', content: system },
-      { role: 'system', content: `Conversation so far: ${chatSummary}` },
-      { role: 'user', content: userMessage }
-    ],
-    temperature: 0.0,
-    max_tokens: 800
-  };
-
-  try {
-    const resp = await axios.post(
-      'https://openrouter.ai/api/v1/chat/completions',
-      body,
-      {
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        validateStatus: () => true // let us handle non-2xx manually
-      }
-    );
-
-    if (resp.status < 200 || resp.status >= 300) {
-      throw new Error(
-        'LLM_TRANSLATE_ERROR: ' + resp.status + ' ' + JSON.stringify(resp.data)
-      );
-    }
-
-    let content = resp.data?.choices?.[0]?.message?.content || '';
+    const body = {
+        model: 'openai/gpt-oss-20b:free',
+        messages: [
+            { role: 'system', content: system },
+            { role: 'system', content: `Conversation so far: ${chatSummary}` },
+            { role: 'user', content: userMessage }
+        ],
+        temperature: 0.0,
+       
+        max_tokens: 2048
+    };
 
     try {
-      // First, try to parse the content directly. This works if the LLM returns perfect JSON.
-      const parsed = JSON.parse(content);
-      console.log("Successfully parsed JSON directly from LLM:", parsed);
-      if (!parsed.sql || !Array.isArray(parsed.params)) {
-        throw new Error('Translator returned invalid JSON fields');
-      }
-      return parsed;
-    } catch (err) {
-      console.warn("Direct JSON parsing failed, attempting to extract from markdown.");
-      // If direct parsing fails, try to extract JSON from a markdown code block.
-      // This handles cases like ```json\n{...}\n```
-      const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
-      if (jsonMatch && jsonMatch[1]) {
-        try {
-          const parsed = JSON.parse(jsonMatch[1]);
-          console.log("Successfully parsed JSON from markdown block:", parsed);
-          if (!parsed.sql || !Array.isArray(parsed.params)) {
-            throw new Error('Translator returned invalid JSON fields from markdown block');
-          }
-          return parsed;
-        } catch (parseError) {
-            console.error("Failed to parse JSON even after extracting from markdown.", parseError);
-        }
-      }
+        const resp = await axios.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            body,
+            {
+                headers: {
+                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                validateStatus: () => true // let us handle non-2xx manually
+            }
+        );
 
-      // As a final fallback, use the original broader regex.
-      const fallbackJsonMatch = content.match(/\{[\s\S]*\}/);
-      if (fallbackJsonMatch) {
-          try {
-            const parsed = JSON.parse(fallbackJsonMatch[0]);
-            console.log("Successfully parsed JSON with fallback regex:", parsed);
+        if (resp.status < 200 || resp.status >= 300) {
+            throw new Error(
+                'LLM_TRANSLATE_ERROR: ' + resp.status + ' ' + JSON.stringify(resp.data)
+            );
+        }
+
+        const choice = resp.data?.choices?.[0];
+        console.log("LLM Finish Reason:", choice?.finish_reason); // Logs 'stop', 'length', etc.
+        
+        let content = choice?.message?.content || '';
+        console.log("LLM Response Content:", content);
+
+        try {
+            const parsed = JSON.parse(content);
+            console.log("Successfully parsed JSON directly from LLM:", parsed);
             if (!parsed.sql || !Array.isArray(parsed.params)) {
-                throw new Error('Translator returned invalid JSON fields from fallback regex');
+                throw new Error('Translator returned invalid JSON fields');
             }
             return parsed;
-          } catch (fallbackParseError) {
-             console.error("All parsing attempts failed.", fallbackParseError);
-             throw new Error("Could not parse JSON from LLM response after all attempts.");
-          }
-      }
-      
-      // If no JSON is found by any method, throw the final error.
-      throw new Error("Could not find any valid JSON in the LLM response.");
-    }
+        } catch (err) {
+            console.warn("Direct JSON parsing failed, attempting to extract from markdown.");
+            const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+            if (jsonMatch && jsonMatch[1]) {
+                try {
+                    const parsed = JSON.parse(jsonMatch[1]);
+                    console.log("Successfully parsed JSON from markdown block:", parsed);
+                    if (!parsed.sql || !Array.isArray(parsed.params)) {
+                        throw new Error('Translator returned invalid JSON fields from markdown block');
+                    }
+                    return parsed;
+                } catch (parseError) {
+                    console.error("Failed to parse JSON even after extracting from markdown.", parseError);
+                }
+            }
 
-  } catch (error) {
-    // Re-throw the error to be handled by the calling function.
-    console.error("An error occurred in translateNLToSQL:", error);
-    throw error;
-  }
+            const fallbackJsonMatch = content.match(/\{[\s\S]*\}/);
+            if (fallbackJsonMatch) {
+                try {
+                    const parsed = JSON.parse(fallbackJsonMatch[0]);
+                    console.log("Successfully parsed JSON with fallback regex:", parsed);
+                    if (!parsed.sql || !Array.isArray(parsed.params)) {
+                        throw new Error('Translator returned invalid JSON fields from fallback regex');
+                    }
+                    return parsed;
+                } catch (fallbackParseError) {
+                    console.error("All parsing attempts failed.", fallbackParseError);
+                    throw new Error("Could not parse JSON from LLM response after all attempts.");
+                }
+            }
+            
+            throw new Error("Could not find any valid JSON in the LLM response.");
+        }
+
+    } catch (error) {
+        console.error("An error occurred in translateNLToSQL:", error.message);
+        throw error;
+    }
 }
 
 module.exports = { translateNLToSQL };
