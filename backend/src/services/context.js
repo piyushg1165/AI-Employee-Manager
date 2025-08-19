@@ -28,14 +28,16 @@ async function appendChatMessage(chatId, role, content) {
       chatId,
       result: '' // find the user's message waiting for assistant response
     }).sort({ createdAt: -1 }); // get the latest one
-
+    
     if (!message) {
       throw new Error('No user message found to attach assistant response');
     }
-
+    
     // Update the same message with assistant response
     message.result = content;
     await message.save();
+    await updateSummary(chatId); // ensure summary is updated
+
     return message._id;
   } else {
     throw new Error(`Invalid role: ${role}`);
@@ -50,6 +52,15 @@ async function getLastMessages(chatId, limit = 5) {
     .sort({ createdAt: -1 })
     .limit(limit)
     .lean();
+}
+
+async function updateSummary(chatId) {
+  if(!chatId){
+    console.log("No chat ID provided for summary updation");
+    return;
+  };
+  await compressOldMessages(chatId);
+ 
 }
 
 /**
@@ -95,7 +106,10 @@ async function compressOldMessages(chatId) {
     .join('\n\n');
 
 
-  const system = `You are a conversation summarizer. Summarize the following chat focusing on user's preferences, constraints, and relevant facts in 2-3 sentences.`;
+  const system = `
+  - You are a conversation summarizer.
+  - Summarize the following chat focusing on including every detail, user's preferences, constraints, and relevant facts in 5-25 points accordingly to the total data which have to preserved.
+  - Make sure that the topics of the conversation are arranged accordingly to their relevance and timing.`;
 
   const body = {
     model: 'openai/gpt-oss-20b:free',
