@@ -10,6 +10,7 @@ import {
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import axios from "axios";
 
+
 const UserProfile = ({
 	userData,
 	onLogout,
@@ -28,6 +29,8 @@ const UserProfile = ({
 	const [selectedFile, setSelectedFile] = useState(null);
 	const [fileName, setFileName] = useState("");
 	const [toast, setToast] = useState({ show: false, message: "", type: "" });
+	const [newSkillInput, setNewSkillInput] = useState('');
+    const [newProjectInput, setNewProjectInput] = useState('');
 	const [employeeForm, setEmployeeForm] = useState({
 		employee_id: "",
 		name: "",
@@ -134,42 +137,45 @@ const UserProfile = ({
 	};
 
 	const addEmployee = async () => {
-		setEmployeeLoading(true);
-		try {
-			const response = await axios.post(
-				"http://localhost:8000/api/employee/upload-employee-neon",
-				employeeForm,
-				{
-					withCredentials: true,
-				}
-			);
-			if (response.data) {
-				console.log("Employee added successfully:", response.data);
-				setShowEmployeeModal(false);
-				// Reset form
-				setEmployeeForm({
-					employee_id: "",
-					name: "",
-					email: "",
-					phone: "",
-					position: "",
-					joining_date: "",
-					employment_type: "",
-					department: "",
-					location: "",
-					manager: "",
-					experience_years: 0,
-					is_remote: false,
-					skills: [],
-					projects: [],
-				});
+	setEmployeeLoading(true);
+	try {
+		const response = await axios.post(
+			"http://localhost:8000/api/employee/upload-employee-neon",
+			employeeForm,
+			{
+				withCredentials: true,
 			}
-		} catch (error) {
-			console.error("Error adding employee:", error);
-		} finally {
-			setEmployeeLoading(false);
+		);
+		if (response.data) {
+			console.log("Employee added successfully:", response.data);
+			setShowEmployeeModal(false);
+			// Reset form
+			setEmployeeForm({
+				employee_id: "",
+				name: "",
+				email: "",
+				phone: "",
+				position: "",
+				joining_date: "",
+				employment_type: "",
+				department: "",
+				location: "",
+				manager: "",
+				experience_years: 0,
+				is_remote: false,
+				skills: [],
+				projects: [],
+			});
+			// Reset input fields
+			setNewSkillInput('');
+			setNewProjectInput('');
 		}
-	};
+	} catch (error) {
+		console.error("Error adding employee:", error);
+	} finally {
+		setEmployeeLoading(false);
+	}
+};
 
 	const handleFileChange = (e) => {
 		const file = e.target.files[0];
@@ -629,427 +635,542 @@ const UserProfile = ({
 				)}
 
 			{/* Add Employee Modal */}
-			{showEmployeeModal &&
-				createPortal(
-					<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-						<div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-							{/* Modal Header */}
-							<div className="flex items-center justify-between p-6 border-b border-gray-200">
-								<h2 className="text-xl font-semibold text-gray-900">
-									Add Employee Information
-								</h2>
-								<button
-									onClick={() => setShowEmployeeModal(false)}
-									className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-									title="Close"
-								>
-									<svg
-										className="w-5 h-5 text-gray-500"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M6 18L18 6M6 6l12 12"
-										/>
-									</svg>
-								</button>
-							</div>
+{showEmployeeModal &&
+	createPortal(
+		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+			<div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+				{/* Modal Header */}
+				<div className="flex items-center justify-between p-6 border-b border-gray-200">
+					<h2 className="text-xl font-semibold text-gray-900">
+						Add Employee Information
+					</h2>
+					<button
+						onClick={() => setShowEmployeeModal(false)}
+						className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+						title="Close"
+					>
+						<svg
+							className="w-5 h-5 text-gray-500"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</button>
+				</div>
 
-							{/* Modal Content */}
-							<div className="p-6">
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									{/* Employee ID */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Employee ID *
-										</label>
-										<input
-											type="text"
-											value={employeeForm.employee_id}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													employee_id: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											placeholder="EMP002"
-											required
-										/>
-									</div>
+				{/* Modal Content */}
+				<div className="p-6">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+						{/* Employee ID */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Employee ID *
+							</label>
+							<input
+								type="text"
+								value={employeeForm.employee_id}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										employee_id: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								placeholder="EMP002"
+								required
+							/>
+						</div>
 
-									{/* Name */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Full Name *
-										</label>
-										<input
-											type="text"
-											value={employeeForm.name}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													name: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											placeholder="Aarav Mehta"
-											required
-										/>
-									</div>
+						{/* Name */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Full Name *
+							</label>
+							<input
+								type="text"
+								value={employeeForm.name}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										name: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								placeholder="Aarav Mehta"
+								required
+							/>
+						</div>
 
-									{/* Email */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Email *
-										</label>
-										<input
-											type="email"
-											value={employeeForm.email}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													email: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											placeholder="aarav.mehta@example.com"
-											required
-										/>
-									</div>
+						{/* Email */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Email *
+							</label>
+							<input
+								type="email"
+								value={employeeForm.email}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										email: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								placeholder="aarav.mehta@example.com"
+								required
+							/>
+						</div>
 
-									{/* Phone */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Phone *
-										</label>
-										<input
-											type="tel"
-											value={employeeForm.phone}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													phone: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											placeholder="+91-9123456780"
-											required
-										/>
-									</div>
+						{/* Phone */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Phone *
+							</label>
+							<input
+								type="tel"
+								value={employeeForm.phone}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										phone: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								placeholder="+91-9123456780"
+								required
+							/>
+						</div>
 
-									{/* Position */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Position *
-										</label>
-										<select
-											value={employeeForm.position}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													position: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											required
-										>
-											<option value="">Select Position</option>
-											<option value="Frontend Developer">
-												Frontend Developer
-											</option>
-											<option value="Backend Developer">
-												Backend Developer
-											</option>
-											<option value="Full Stack Developer">
-												Full Stack Developer
-											</option>
-											<option value="DevOps Engineer">DevOps Engineer</option>
-											<option value="Data Scientist">Data Scientist</option>
-											<option value="Product Manager">Product Manager</option>
-											<option value="UI/UX Designer">UI/UX Designer</option>
-											<option value="QA Engineer">QA Engineer</option>
-										</select>
-									</div>
+						{/* Position */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Position *
+							</label>
+							<select
+								value={employeeForm.position}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										position: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								required
+							>
+								<option value="">Select Position</option>
+								<option value="Frontend Developer">
+									Frontend Developer
+								</option>
+								<option value="Backend Developer">
+									Backend Developer
+								</option>
+								<option value="Full Stack Developer">
+									Full Stack Developer
+								</option>
+								<option value="DevOps Engineer">DevOps Engineer</option>
+								<option value="Data Scientist">Data Scientist</option>
+								<option value="Product Manager">Product Manager</option>
+								<option value="UI/UX Designer">UI/UX Designer</option>
+								<option value="QA Engineer">QA Engineer</option>
+							</select>
+						</div>
 
-									{/* Joining Date */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Joining Date *
-										</label>
-										<input
-											type="date"
-											value={employeeForm.joining_date}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													joining_date: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											required
-										/>
-									</div>
+						{/* Joining Date */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Joining Date *
+							</label>
+							<input
+								type="date"
+								value={employeeForm.joining_date}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										joining_date: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								required
+							/>
+						</div>
 
-									{/* Employment Type */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Employment Type *
-										</label>
-										<select
-											value={employeeForm.employment_type}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													employment_type: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											required
-										>
-											<option value="">Select Type</option>
-											<option value="Full-time">Full-time</option>
-											<option value="Part-time">Part-time</option>
-											<option value="Contract">Contract</option>
-											<option value="Intern">Intern</option>
-										</select>
-									</div>
+						{/* Employment Type */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Employment Type *
+							</label>
+							<select
+								value={employeeForm.employment_type}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										employment_type: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								required
+							>
+								<option value="">Select Type</option>
+								<option value="Full-time">Full-time</option>
+								<option value="Part-time">Part-time</option>
+								<option value="Contract">Contract</option>
+								<option value="Intern">Intern</option>
+							</select>
+						</div>
 
-									{/* Department */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Department *
-										</label>
-										<select
-											value={employeeForm.department}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													department: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											required
-										>
-											<option value="">Select Department</option>
-											<option value="Engineering">Engineering</option>
-											<option value="Design">Design</option>
-											<option value="Product">Product</option>
-											<option value="Marketing">Marketing</option>
-											<option value="Sales">Sales</option>
-											<option value="HR">HR</option>
-											<option value="Finance">Finance</option>
-										</select>
-									</div>
+						{/* Department */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Department *
+							</label>
+							<select
+								value={employeeForm.department}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										department: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								required
+							>
+								<option value="">Select Department</option>
+								<option value="Engineering">Engineering</option>
+								<option value="Design">Design</option>
+								<option value="Product">Product</option>
+								<option value="Marketing">Marketing</option>
+								<option value="Sales">Sales</option>
+								<option value="HR">HR</option>
+								<option value="Finance">Finance</option>
+							</select>
+						</div>
 
-									{/* Location */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Location *
-										</label>
-										<select
-											value={employeeForm.location}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													location: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											required
-										>
-											<option value="">Select Location</option>
-											<option value="Bangalore">Bangalore</option>
-											<option value="Mumbai">Mumbai</option>
-											<option value="Delhi">Delhi</option>
-											<option value="Hyderabad">Hyderabad</option>
-											<option value="Chennai">Chennai</option>
-											<option value="Pune">Pune</option>
-											<option value="Remote">Remote</option>
-										</select>
-									</div>
+						{/* Location */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Location *
+							</label>
+							<select
+								value={employeeForm.location}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										location: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								required
+							>
+								<option value="">Select Location</option>
+								<option value="Bangalore">Bangalore</option>
+								<option value="Mumbai">Mumbai</option>
+								<option value="Delhi">Delhi</option>
+								<option value="Hyderabad">Hyderabad</option>
+								<option value="Chennai">Chennai</option>
+								<option value="Pune">Pune</option>
+								<option value="Remote">Remote</option>
+							</select>
+						</div>
 
-									{/* Manager */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Manager *
-										</label>
-										<input
-											type="text"
-											value={employeeForm.manager}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													manager: e.target.value,
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											placeholder="Sneha Kapoor"
-											required
-										/>
-									</div>
+						{/* Manager */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Manager *
+							</label>
+							<input
+								type="text"
+								value={employeeForm.manager}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										manager: e.target.value,
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								placeholder="Sneha Kapoor"
+								required
+							/>
+						</div>
 
-									{/* Experience Years */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Experience (Years) *
-										</label>
-										<input
-											type="number"
-											min="0"
-											max="50"
-											value={employeeForm.experience_years}
-											onChange={(e) =>
-												setEmployeeForm({
-													...employeeForm,
-													experience_years: parseInt(e.target.value) || "",
-												})
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											placeholder="4"
-											required
-										/>
-									</div>
+						{/* Experience Years */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Experience (Years) *
+							</label>
+							<input
+								type="number"
+								min="0"
+								max="50"
+								value={employeeForm.experience_years}
+								onChange={(e) =>
+									setEmployeeForm({
+										...employeeForm,
+										experience_years: parseInt(e.target.value) || "",
+									})
+								}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								placeholder="4"
+								required
+							/>
+						</div>
 
-									{/* Remote Work */}
-									<div className="md:col-span-2">
-										<label className="flex items-center gap-2">
-											<input
-												type="checkbox"
-												checked={employeeForm.is_remote}
-												onChange={(e) =>
+						{/* Remote Work */}
+						<div className="md:col-span-2">
+							<label className="flex items-center gap-2">
+								<input
+									type="checkbox"
+									checked={employeeForm.is_remote}
+									onChange={(e) =>
+										setEmployeeForm({
+											...employeeForm,
+											is_remote: e.target.checked,
+										})
+									}
+									className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+								/>
+								<span className="text-sm font-medium text-gray-700">
+									Remote Work
+								</span>
+							</label>
+						</div>
+
+						{/* Skills - Dynamic Input */}
+						<div className="md:col-span-2">
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Skills *
+							</label>
+							<div className="space-y-2">
+								{/* Skills Input */}
+								<div className="flex gap-2">
+									<input
+										type="text"
+										value={employeeForm.newSkill || ''}
+										onChange={(e) =>
+											setEmployeeForm({
+												...employeeForm,
+												newSkill: e.target.value,
+											})
+										}
+										onKeyPress={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												const skill = employeeForm.newSkill?.trim();
+												if (skill && !employeeForm.skills.includes(skill)) {
 													setEmployeeForm({
 														...employeeForm,
-														is_remote: e.target.checked,
-													})
+														skills: [...employeeForm.skills, skill],
+														newSkill: '',
+													});
 												}
-												className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-											/>
-											<span className="text-sm font-medium text-gray-700">
-												Remote Work
-											</span>
-										</label>
-									</div>
-
-									{/* Skills */}
-									<div className="md:col-span-2">
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Skills *
-										</label>
-										<select
-											multiple
-											value={employeeForm.skills}
-											onChange={(e) => {
-												const selectedOptions = Array.from(
-													e.target.selectedOptions,
-													(option) => option.value
-												);
-												setEmployeeForm({
-													...employeeForm,
-													skills: selectedOptions,
-												});
-											}}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
-											required
-										>
-											<option value="JavaScript">JavaScript</option>
-											<option value="React">React</option>
-											<option value="Node.js">Node.js</option>
-											<option value="Express">Express</option>
-											<option value="MongoDB">MongoDB</option>
-											<option value="TypeScript">TypeScript</option>
-											<option value="Docker">Docker</option>
-											<option value="Python">Python</option>
-											<option value="Java">Java</option>
-											<option value="AWS">AWS</option>
-											<option value="Git">Git</option>
-											<option value="SQL">SQL</option>
-										</select>
-										<p className="text-xs text-gray-500 mt-1">
-											Hold Ctrl/Cmd to select multiple skills
-										</p>
-									</div>
-
-									{/* Projects */}
-									<div className="md:col-span-2">
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Projects *
-										</label>
-										<select
-											multiple
-											value={employeeForm.projects}
-											onChange={(e) => {
-												const selectedOptions = Array.from(
-													e.target.selectedOptions,
-													(option) => option.value
-												);
-												setEmployeeForm({
-													...employeeForm,
-													projects: selectedOptions,
-												});
-											}}
-											className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
-											required
-										>
-											<option value="API Gateway">API Gateway</option>
-											<option value="Authentication Service">
-												Authentication Service
-											</option>
-											<option value="E-commerce Platform">
-												E-commerce Platform
-											</option>
-											<option value="Mobile App">Mobile App</option>
-											<option value="Dashboard">Dashboard</option>
-											<option value="Payment System">Payment System</option>
-											<option value="CRM System">CRM System</option>
-											<option value="Analytics Platform">
-												Analytics Platform
-											</option>
-										</select>
-										<p className="text-xs text-gray-500 mt-1">
-											Hold Ctrl/Cmd to select multiple projects
-										</p>
-									</div>
-								</div>
-
-								{/* Action Buttons */}
-								<div className="flex gap-3 pt-6">
+											}
+										}}
+										className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										placeholder="Type skill and press Enter"
+									/>
 									<button
 										type="button"
-										onClick={() => setShowEmployeeModal(false)}
-										disabled={employeeLoading}
-										className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 disabled:opacity-50"
+										onClick={() => {
+											const skill = employeeForm.newSkill?.trim();
+											if (skill && !employeeForm.skills.includes(skill)) {
+												setEmployeeForm({
+													...employeeForm,
+													skills: [...employeeForm.skills, skill],
+													newSkill: '',
+												});
+											}
+										}}
+										className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
 									>
-										Cancel
-									</button>
-									<button
-										onClick={addEmployee}
-										disabled={employeeLoading}
-										className="flex-1 px-4 py-2 text-white bg-gray-900 hover:bg-black rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-									>
-										{employeeLoading ? (
-											<>
-												<AiOutlineLoading3Quarters
-													className="animate-spin"
-													size={16}
-												/>
-												Adding Employee...
-											</>
-										) : (
-											"Add Employee"
-										)}
+										Add
 									</button>
 								</div>
+								
+								{/* Skills Tags */}
+								{employeeForm.skills.length > 0 && (
+									<div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border">
+										{employeeForm.skills.map((skill, index) => (
+											<span
+												key={index}
+												className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+											>
+												{skill}
+												<button
+													type="button"
+													onClick={() => {
+														const updatedSkills = employeeForm.skills.filter(
+															(_, i) => i !== index
+														);
+														setEmployeeForm({
+															...employeeForm,
+															skills: updatedSkills,
+														});
+													}}
+													className="hover:bg-blue-200 rounded-full p-1 transition-colors"
+													title="Remove skill"
+												>
+													<svg
+														className="w-3 h-3"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															strokeWidth={2}
+															d="M6 18L18 6M6 6l12 12"
+														/>
+													</svg>
+												</button>
+											</span>
+										))}
+									</div>
+								)}
+								<p className="text-xs text-gray-500">
+									Type skills and press Enter or click Add. Click × to remove.
+								</p>
 							</div>
 						</div>
-					</div>,
-					document.body
-				)}
 
+						{/* Projects - Dynamic Input */}
+						<div className="md:col-span-2">
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Projects *
+							</label>
+							<div className="space-y-2">
+								{/* Projects Input */}
+								<div className="flex gap-2">
+									<input
+										type="text"
+										value={employeeForm.newProject || ''}
+										onChange={(e) =>
+											setEmployeeForm({
+												...employeeForm,
+												newProject: e.target.value,
+											})
+										}
+										onKeyPress={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												const project = employeeForm.newProject?.trim();
+												if (project && !employeeForm.projects.includes(project)) {
+													setEmployeeForm({
+														...employeeForm,
+														projects: [...employeeForm.projects, project],
+														newProject: '',
+													});
+												}
+											}
+										}}
+										className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										placeholder="Type project and press Enter"
+									/>
+									<button
+										type="button"
+										onClick={() => {
+											const project = employeeForm.newProject?.trim();
+											if (project && !employeeForm.projects.includes(project)) {
+												setEmployeeForm({
+													...employeeForm,
+													projects: [...employeeForm.projects, project],
+													newProject: '',
+												});
+											}
+										}}
+										className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+									>
+										Add
+									</button>
+								</div>
+								
+								{/* Projects Tags */}
+								{employeeForm.projects.length > 0 && (
+									<div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border">
+										{employeeForm.projects.map((project, index) => (
+											<span
+												key={index}
+												className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
+											>
+												{project}
+												<button
+													type="button"
+													onClick={() => {
+														const updatedProjects = employeeForm.projects.filter(
+															(_, i) => i !== index
+														);
+														setEmployeeForm({
+															...employeeForm,
+															projects: updatedProjects,
+														});
+													}}
+													className="hover:bg-green-200 rounded-full p-1 transition-colors"
+													title="Remove project"
+												>
+													<svg
+														className="w-3 h-3"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															strokeWidth={2}
+															d="M6 18L18 6M6 6l12 12"
+														/>
+													</svg>
+												</button>
+											</span>
+										))}
+									</div>
+								)}
+								<p className="text-xs text-gray-500">
+									Type projects and press Enter or click Add. Click × to remove.
+								</p>
+							</div>
+						</div>
+					</div>
+
+					{/* Action Buttons */}
+					<div className="flex gap-3 pt-6">
+						<button
+							type="button"
+							onClick={() => setShowEmployeeModal(false)}
+							disabled={employeeLoading}
+							className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 disabled:opacity-50"
+						>
+							Cancel
+						</button>
+						<button
+							onClick={addEmployee}
+							disabled={employeeLoading}
+							className="flex-1 px-4 py-2 text-white bg-gray-900 hover:bg-black rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+						>
+							{employeeLoading ? (
+								<>
+									<AiOutlineLoading3Quarters
+										className="animate-spin"
+										size={16}
+									/>
+									Adding Employee...
+								</>
+							) : (
+								"Add Employee"
+							)}
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>,
+		document.body
+	)}
 			{/* Excel Upload Modal */}
 			{showExcelUploadModal &&
 				createPortal(

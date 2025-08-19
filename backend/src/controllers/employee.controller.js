@@ -272,4 +272,4 @@ const uploadSingleEmployeeToNeon = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-module.exports = {uploadEmployeesFromExcel , uploadSingleEmployee, uploadSingleEmployeeToNeon}
+module.exports = {uploadEmployeesFromExcel , uploadSingleEmployee, uploadSingleEmployeeToNeon};
