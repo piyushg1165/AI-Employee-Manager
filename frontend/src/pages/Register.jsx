@@ -4,6 +4,8 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEyeSlash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import api from "../api/axios.js"
+
 
 export default function Register() {
 	const [email, setEmail] = useState("");
@@ -33,7 +35,7 @@ export default function Register() {
 		setError("");
 
 		try {
-			const response = await axios.post("http://localhost:8000/api/user/register", {
+			const response = await api.post("/user/register", {
 				email,
 				password,
 				firstName,

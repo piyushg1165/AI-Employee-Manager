@@ -7,8 +7,14 @@ import UserProfile from "./UserProfile";
 import { FiSidebar } from "react-icons/fi";
 import { MdOutlineDelete } from "react-icons/md";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import api from "../api/axios.js"
 
 export default function SideBar({ isOpen, setIsOpen }) {
+
+
+   
+
+
 	const navigator = useNavigate();
 	const { chatId } = useParams();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -37,8 +43,8 @@ export default function SideBar({ isOpen, setIsOpen }) {
 	const Logout = async () => {
 		setLogoutLoading(true);
 		try {
-			await axios.post(
-				"http://localhost:8000/api/user/logout",
+			await api.post(
+				"/user/logout",
 				{},
 				{
 					withCredentials: true,
@@ -57,7 +63,7 @@ export default function SideBar({ isOpen, setIsOpen }) {
 	const deleteAllHistory = async () => {
 		setDeleteLoading(true);
 		try {
-			await axios.delete(`http://localhost:8000/api/chat/deletehistory/`, {
+			await api.delete(`/chat/deletehistory/`, {
 				withCredentials: true,
 			});
 			fetchChats(userData._id);
@@ -73,8 +79,8 @@ export default function SideBar({ isOpen, setIsOpen }) {
 	const createChat = async () => {
 		setCreateChatLoading(true);
 		try {
-			const res = await axios.post(
-				"http://localhost:8000/api/chat/createChat",
+			const res = await api.post(
+				"/chat/createChat",
 				{ userId: userData._id, chatName: "new chat" },
 				{
 					withCredentials: true,
@@ -94,8 +100,8 @@ export default function SideBar({ isOpen, setIsOpen }) {
 
 	const deleteChat = async (id) => {
 		try {
-			await axios.delete(
-				`http://localhost:8000/api/chat/deleteChatById/${id}`,
+			await api.delete(
+				`/chat/deleteChatById/${id}`,
 				{
 					withCredentials: true,
 				}

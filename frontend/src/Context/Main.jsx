@@ -2,10 +2,13 @@ import axios from 'axios';
 import React, { use, useEffect, useState } from 'react'
 import { createContext } from 'react'
 import { useNavigate } from 'react-router-dom';
+import api from "../api/axios.js"
+
 
 const Context = createContext();
 
 export default function Main(props) {
+    
     const user = JSON.parse(localStorage.getItem("user"));
     const [userData, setUserData] = useState(null);
     const [userChats, setUserChats] = useState([]);
@@ -26,8 +29,8 @@ export default function Main(props) {
     }
     
 const fetchChats = (id) => {
-    let API = `http://localhost:8000/api/chat/getChatsByUserId/${id}`;
-    axios.get(API,{withCredentials: true})
+    let API = `/chat/getChatsByUserId/${id}`;
+    api.get(API,{withCredentials: true})
     .then((success) => {
         setUserChats(success.data?.chats || []);
     })
@@ -41,9 +44,9 @@ const fetchMessages = (chatId) => {
   console.log("Fetching messages for chat ID:", chatId);
   if (!chatId) return;
 
-  let API = `http://localhost:8000/api/chat/getAllMessagesByChatId/${chatId}`;
+  let API = `/chat/getAllMessagesByChatId/${chatId}`;
 
-  axios.get(API, { withCredentials: true })
+  api.get(API, { withCredentials: true })
     .then(success => {
       if (success.data?.messages) {
         setUserMessages(success.data.messages);

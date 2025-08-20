@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
  
 import { useContext } from "react";
 import { Context } from "../Context/Main";
+import api from "../api/axios.js"
+
 
 export function Landing() {
 	const navigator = useNavigate();

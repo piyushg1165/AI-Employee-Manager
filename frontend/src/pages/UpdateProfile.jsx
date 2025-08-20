@@ -4,8 +4,11 @@ import { Context } from "../Context/Main";
 import axios from "axios";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { MdOutlineArrowBack } from "react-icons/md";
+import api from "../api/axios.js"
+
 
 export default function UpdateProfile() {
+	
 	const { userData, setUserData } = useContext(Context);
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(false);
@@ -90,7 +93,7 @@ export default function UpdateProfile() {
 				data.append("image", formData.profilePic);
 			}
 
-			const response = await axios.put("http://localhost:8000/api/user/update-user", data, {
+			const response = await api.put("/user/update-user", data, {
 				headers: {
 					"Content-Type": "multipart/form-data",
 				},

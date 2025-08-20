@@ -9,6 +9,7 @@ import {
 } from "react-icons/md";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import axios from "axios";
+import api from "../api/axios.js"
 
 
 const UserProfile = ({
@@ -17,6 +18,7 @@ const UserProfile = ({
 	onDeleteHistory,
 	logoutLoading = false,
 }) => {
+	
 	const [showMenu, setShowMenu] = useState(false);
 	const [showProfileModal, setShowProfileModal] = useState(false);
 	const [showEmployeeModal, setShowEmployeeModal] = useState(false);
@@ -139,8 +141,8 @@ const UserProfile = ({
 	const addEmployee = async () => {
 	setEmployeeLoading(true);
 	try {
-		const response = await axios.post(
-			"http://localhost:8000/api/employee/upload-employee-neon",
+		const response = await api.post(
+			"/employee/upload-employee-neon",
 			employeeForm,
 			{
 				withCredentials: true,
@@ -223,8 +225,8 @@ const UserProfile = ({
 			const formData = new FormData();
 			formData.append("file", selectedFile);
 
-			const response = await axios.post(
-				"http://localhost:8000/api/employee/upload-excel-employee",
+			const response = await api.post(
+				"/employee/upload-excel-employee",
 				formData,
 				{
 					headers: {
@@ -312,7 +314,7 @@ const UserProfile = ({
 				data.append("image", formData.profilePic);
 			}
 
-			const response = await axios.put("http://localhost:8000/api/user/update-user", data, {
+			const response = await api.put("/user/update-user", data, {
 				headers: {
 					"Content-Type": "multipart/form-data",
 				},

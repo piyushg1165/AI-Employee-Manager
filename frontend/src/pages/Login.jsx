@@ -5,8 +5,11 @@ import { FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 import { Context } from "../Context/Main";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import api from "../api/axios.js"
+
 
 export default function Login() {
+	
 	const { setUserData, setUserMessages } = useContext(Context);
 	const [, setSearchParams] = useSearchParams();
 	const [loading, setLoading] = useState(false);
@@ -28,8 +31,8 @@ export default function Login() {
 		setError("");
 
 		try {
-			const response = await axios.post(
-				`http://localhost:8000/api/user/login`,
+			const response = await api.post(
+				`/user/login`,
 				{ email, password },
 				{
 					headers: { "Content-Type": "application/json" },
@@ -39,7 +42,7 @@ export default function Login() {
 
 			if (response.data) {
 				try {
-					const userResponse = await axios.get(`http://localhost:8000/api/user`, {
+					const userResponse = await api.get(`/user`, {
 						withCredentials: true,
 					});
 

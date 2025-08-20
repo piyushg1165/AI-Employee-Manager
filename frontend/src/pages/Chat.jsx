@@ -6,8 +6,11 @@ import Message from "../components/Message";
 import MessageInput from "../components/MessageInput";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import api from "../api/axios.js"
+
 
 export default function Chat() {
+	 
 	const { chatId } = useParams();
 	const { userData, setCurrentChat, userMessages, fetchChats, fetchMessages } =
 		useContext(Context);
@@ -41,8 +44,8 @@ export default function Chat() {
 		setLoading(true);
 
 		try {
-			await axios.post(
-				`http://localhost:8000/api/message/query`,
+			await api.post(
+				`/message/query`,
 				{ message, chatId },
 				{
 					headers: { "Content-Type": "application/json" },
@@ -62,7 +65,7 @@ export default function Chat() {
 
 	const handleDeleteMessage = async (messageId) => {
 		try {
-			await axios.delete(`http://localhost:8000/api/message/deleteMessage/${messageId}`, {
+			await api.delete(`/message/deleteMessage/${messageId}`, {
 				withCredentials: true,
 			});
 			fetchMessages(chatId);

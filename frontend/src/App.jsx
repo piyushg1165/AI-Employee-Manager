@@ -10,6 +10,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import { Landing } from "./pages/Landing";
 import Layout from "./pages/Layout";
 
+
 export default function App() {
 	const routes = createBrowserRouter([
 		{
