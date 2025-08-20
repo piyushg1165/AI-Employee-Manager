@@ -1,5 +1,6 @@
 const Chat = require('../models/chat.model.js');
 const Message = require('../models/message.model.js');
+const Summary = require('../models/summary.model.js')
 
 const getAllChats = async (req, res) => {
     const { userId } = req.params; 
@@ -91,6 +92,10 @@ const deleteChatById = async (req, res) => {
     const { id } = req.params;
 
     try {
+        const summary = await Summary.findOne({ chatId: id });
+        if (summary) {
+            await Summary.deleteOne({ chatId: id });
+        }
 
         const messages = await Message.find({ chatId: id });
         if (messages && messages.length > 0) {
