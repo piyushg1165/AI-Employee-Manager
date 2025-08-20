@@ -1,11 +1,11 @@
 const dotenv = require('dotenv');
 dotenv.config();
-const {connectDB}=require('./db/mongodb')
+const {connectDB}=require('./src/db/mongodb.js')
 const express = require('express');
 // const bodyParser = require('body-parser');
-const userRoutes = require('./routes/user.route.js');
-const messageRoutes = require('./routes/message.route.js');
-const chatRoutes = require('./routes/chat.route.js');
+const userRoutes = require('./src/routes/user.route.js');
+const messageRoutes = require('./src/routes/message.route.js');
+const chatRoutes = require('./src/routes/chat.route.js');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
