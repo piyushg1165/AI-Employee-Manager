@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 
 const allowedOrigins = [
   "http://localhost:3000", // for local dev
-  "https://ai-employee-manager.vercel.app/", // your frontend on vercel
+  "https://ai-employee-manager.vercel.app", // your frontend on vercel
 ];
 
 app.use(
