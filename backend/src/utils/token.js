@@ -11,7 +11,8 @@ const jwt = require('jsonwebtoken');
       maxAge: 24 * 60 * 60 * 1000 * 7, // Cookie will expire after 7 day
       httpOnly: true, // Cookie is only accessible via HTTP(S) and not client-side JavaScript
       secure: process.env.NODE_ENV === 'production', // Cookie will only be sent over HTTPS if in production
-      sameSite: 'strict', // SameSite attribute to prevent CSRF attacks
+    //   sameSite: 'strict', // SameSite attribute to prevent CSRF attacks
+        sameSite: process.env.NODE_ENV === 'development'? 'strict' : 'none'
     };
     // Set the cookie in the response
 res.cookie("token", token, options);
