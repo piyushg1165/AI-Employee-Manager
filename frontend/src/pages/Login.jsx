@@ -2,7 +2,6 @@ import React, { useContext, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa";
-import axios from "axios";
 import { Context } from "../Context/Main";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import api from "../api/axios.js"
