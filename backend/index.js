@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 
 
 app.use(cors({
-  origin: [ '*', 'http://localhost:5173','http://localhost:3000', 'https://virox-ai.vercel.app/'], 
+  origin: [ '*', 'http://localhost:5173','http://localhost:3000', 'https://virox-ai.vercel.app/','https://ai-employee-manager.vercel.app/'], 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   
   credentials: true 
