@@ -6,6 +6,7 @@ const express = require('express');
 const userRoutes = require('./src/routes/user.route.js');
 const messageRoutes = require('./src/routes/message.route.js');
 const chatRoutes = require('./src/routes/chat.route.js');
+const employeeRoutes = require('./src/routes/employee.route.js');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
@@ -43,6 +44,7 @@ app.use(cookieParser());
 app.use("/api/user", userRoutes);
 app.use('/api/message', messageRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/employee', employeeRoutes);
 
 
 app.get('/', (req, res) => {

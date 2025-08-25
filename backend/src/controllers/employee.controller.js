@@ -5,6 +5,13 @@ const { formatEmployee } = require('../utils/formatEmployee.js');
 const fs = require('fs');
 const xlsx = require('xlsx');
 const { pgPool } = require("../db/postgres.js");
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  connectionString: process.env.PG_CONNECTION_STRING_V2, // from Neon dashboard
+  ssl: { rejectUnauthorized: false }, // Neon requires SSL
+});
+
 
 const uploadSingleEmployee = async (req, res) => {
   try {
@@ -272,4 +279,117 @@ const uploadSingleEmployeeToNeon = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-module.exports = {uploadEmployeesFromExcel , uploadSingleEmployee, uploadSingleEmployeeToNeon};
+
+const uploadEmployeesFromExcelToNeon = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const filePath = req.file.path;
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
+  defval: null, // ensures missing cells are null instead of undefined
+  raw: false    // parses dropdowns, dates, etc. as text
+});
+
+    let insertedCount = 0;
+
+    for (const employees of data) {
+      const {
+        id, // 👈 must be unique, from Excel
+        name,
+        date_of_birth,
+        gender,
+        personal_email,
+        professional_email,
+        phone,
+        position,
+        joining_date,
+        employment_type,
+        department,
+        location,
+        current_address,
+        permanent_address,
+        team_lead,
+        experience,
+        is_remote,
+        skills,
+        projects,
+        blood_group,
+      } = employees;
+
+      // ✅ Require only ID (unique key) and Name
+      if (!id || !name) {
+        console.warn(`⚠️ Skipping employee: Missing id or name`);
+        continue;
+      }
+
+      // Convert arrays if provided
+      const skillsArray =
+        skills && Array.isArray(skills) ? skills : skills ? skills.split(",") : null;
+      const projectsArray =
+        projects && Array.isArray(projects) ? projects : projects ? projects.split(",") : null;
+
+      // Insert or update
+      await client.query(
+        `INSERT INTO employees 
+        (id, name, date_of_birth, gender, personal_email, professional_email, phone, position, joining_date, employment_type, department, location, current_address, permanent_address, team_lead, experience, is_remote, skills, projects, blood_group)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+        ON CONFLICT (id) DO UPDATE 
+          SET name = EXCLUDED.name,
+              date_of_birth = EXCLUDED.date_of_birth,
+              gender = EXCLUDED.gender,
+              personal_email = EXCLUDED.personal_email,
+              professional_email = EXCLUDED.professional_email,
+              phone = EXCLUDED.phone,
+              position = EXCLUDED.position,
+              joining_date = EXCLUDED.joining_date,
+              employment_type = EXCLUDED.employment_type,
+              department = EXCLUDED.department,
+              location = EXCLUDED.location,
+              current_address = EXCLUDED.current_address,
+              permanent_address = EXCLUDED.permanent_address,
+              team_lead = EXCLUDED.team_lead,
+              experience = EXCLUDED.experience,
+              is_remote = EXCLUDED.is_remote,
+              skills = EXCLUDED.skills,
+              projects = EXCLUDED.projects,
+              blood_group = EXCLUDED.blood_group`,
+        [
+          id,
+          name,
+          date_of_birth || null,
+          gender || null,
+          personal_email || null,
+          professional_email || null, // 👈 can be null
+          phone || null,
+          position || null,
+          joining_date || null,
+          employment_type || null,
+          department || null,
+          location || null,
+          current_address || null,
+          permanent_address || null,
+          team_lead || null,
+          experience ?? null,
+          is_remote ?? null,
+          skillsArray,
+          projectsArray,
+          blood_group || null,
+        ]
+      );
+
+      insertedCount++;
+    }
+
+    fs.unlinkSync(filePath);
+    res.status(200).json({ message: `✅ ${insertedCount} employees uploaded.` });
+  } catch (err) {
+    console.error("❌ Excel upload error:", err);
+    res.status(500).json({ error: err.message, stack: err.stack });
+  } finally {
+    client.release();
+  }
+};
+
+
+module.exports = {uploadEmployeesFromExcel , uploadSingleEmployee, uploadSingleEmployeeToNeon, uploadEmployeesFromExcelToNeon};
